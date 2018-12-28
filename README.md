@@ -14,3 +14,7 @@ An example configuration can be found in the repository for the case that you ac
 
 ### Channel Creation
 `watchlist` the key specifies the parent channel to track and under which channels are created, `prefix` specifies the prefix of the created channels, that will be numbered, `max_clients` specifies the maximum numer of clients in the created channels, `icon_id` its icon and `join_power`the needed join power in order to join
+
+
+## Dependencies
+`ts3==2.0.0b2`
