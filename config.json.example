@@ -1,0 +1,25 @@
+{
+  "database": "users.db",
+  "uri": "telnet://serveradmin:password@123.123.123.123:10011",
+  "sid": 1,
+  "client_name": "Bot",
+  "join_channel_id": "42",
+  "moderator_uids": ["aPjBEhgaipEd+9uGdUt3z6jP2/U=", "b7WAhhV73BW6BcjKfAvingPtSMg="],
+  "log_level": "DEBUG",
+
+  "ranking": {
+    "default_group": "10",
+    "channel_blacklist": ["138", "139"],
+    "rankings": {
+      "10": {"minutes": 15, "to": "11"},
+      "11": {"minutes": 300, "to": "22"}
+    }
+  },
+
+  "channels": {
+    "watchlist": {
+      "20": {"prefix": "Talk", "max_clients": "32", "icon_id": "305642560", "join_power": "0"},
+      "21": {"prefix": "Gaming", "max_clients": "5", "icon_id": "305642910", "join_power": "50"}
+    }
+  }
+}
