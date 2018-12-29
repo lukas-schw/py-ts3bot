@@ -32,6 +32,12 @@ def main():
                 dbconn.close()
                 logger.info("Ctrl-c pressed, shutting down")
                 sys.exit(0)
+            except Exception:
+                if ts3conn.is_connected():
+                    logger.exception("Exception occurred but connection is still open")
+                    continue
+                else:
+                    raise
 
 
 # Function handling the events and initiating activity logs
@@ -247,6 +253,6 @@ if __name__ == "__main__":
         try:
             main()
         except Exception:
-            logger.exception("ts3bot threw exception")
+            logger.exception("Exception occurred and connection is closed")
             logger.info("Trying to restart in 30s")
             time.sleep(30)
