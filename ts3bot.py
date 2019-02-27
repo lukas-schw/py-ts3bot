@@ -85,7 +85,8 @@ def check_channel(ts3conn):
             channels = ts3conn.query("channelfind", pattern=data["prefix"]).all()
             cids = [channel["cid"] for channel in channels]
         except (ts3.query.TS3QueryError, KeyError):
-            cids = []
+            logger.exception("Error in response")
+            continue
         if pid in cids:
             cids.remove(pid)
 
@@ -129,6 +130,7 @@ def check_channel(ts3conn):
                         free_num = nums[i-1]+1
                         orderid = num_to_cid[nums[i-1]]
 
+            logger.debug("Trying to create channel: " + data["prefix"] + " " + str(free_num))
             ret = ts3conn.exec_("channelcreate", channel_name=data["prefix"] + " " + str(free_num),
                                 channel_flag_permanent="1", cpid=pid, channel_order=orderid, channel_codec="4",
                                 channel_flag_maxclients_unlimited="0")
@@ -145,7 +147,6 @@ def check_channel(ts3conn):
                           permvalue="100")
             ts3conn.exec_("channeladdperm", cid=ret[0]["cid"], permsid="i_ft_needed_directory_create_power",
                           permvalue="100")
-            logger.debug("Created Channel: " + data["prefix"] + " " + str(free_num))
 
 
 # Checks all user for their active time, updates the database and if necessary assigns new ranks
