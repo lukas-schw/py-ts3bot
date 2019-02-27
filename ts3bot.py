@@ -59,6 +59,52 @@ def monitor(ts3conn, dbconn):
             if event["msg"] == "!stats":
                 logger.debug(event["invokername"] + " asked for stats")
                 send_stats(ts3conn, dbconn, event["invokerid"])
+            elif event["msg"].startswith("!search_uid"):
+                arguments = event["msg"].split(" ")
+                if len(arguments) != 2:
+                    ts3conn.exec_("sendtextmessage", targetmode="1", target=event["invokerid"], msg="Invalid arguments")
+                    return
+                logger.debug(event["invokername"] + " issued search for " + arguments[1])
+                search_uid(ts3conn, dbconn, arguments[1], event["invokerid"])
+            elif event["msg"].startswith("!search"):
+                arguments = event["msg"].split(" ")
+                if len(arguments) < 2:
+                    ts3conn.exec_("sendtextmessage", targetmode="1", target=event["invokerid"], msg="Invalid arguments")
+                    return
+                username = " ".join(str(x) for x in arguments[1:])
+                logger.debug(event["invokername"] + " issued search for " + username)
+                search_user(ts3conn, dbconn, username, event["invokerid"])
+
+
+# Search for users in database that start with username
+# noinspection SqlNoDataSourceInspection,SqlDialectInspection
+def search_user(ts3conn, dbconn, username, clid):
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT uid, name, time FROM users WHERE LOWER(name) LIKE LOwER(?)", (username + "%", ))
+    result = cursor.fetchall()
+    if len(result) == 0:
+        ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="No user found")
+        return
+
+    msg = "\n"
+    for row in result:
+        msg += row[0] + "\t" + row[1] + "\n" + seconds_to_days(row[2]) + "\n"
+    ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg=msg)
+
+
+# Search for user in database with specified unique ID
+# noinspection SqlNoDataSourceInspection,SqlDialectInspection
+def search_uid(ts3conn, dbconn, uid, clid):
+    cursor = dbconn.cursor()
+    cursor.execute("SELECT uid, name, time FROM users WHERE uid = ?", (uid,))
+    row = cursor.fetchone()
+    if row is None:
+        ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="No user found")
+        return
+
+    ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="\n" + row[0] + "\t" + row[1] + "\n"
+                                                                      + seconds_to_days(row[2]) + "\n")
+
 
 
 # Fetches top 10 active users from the database and sends them to the requester
