@@ -80,7 +80,7 @@ def monitor(ts3conn, dbconn):
 # noinspection SqlNoDataSourceInspection,SqlDialectInspection
 def search_user(ts3conn, dbconn, username, clid):
     cursor = dbconn.cursor()
-    cursor.execute("SELECT uid, name, time FROM users WHERE LOWER(name) LIKE LOwER(?)", (username + "%", ))
+    cursor.execute("SELECT uid, name, first_name, time FROM users WHERE LOWER(name) LIKE LOWER(?)", (username + "%", ))
     result = cursor.fetchall()
     if len(result) == 0:
         ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="No user found")
@@ -88,7 +88,7 @@ def search_user(ts3conn, dbconn, username, clid):
 
     msg = "\n"
     for row in result:
-        msg += row[0] + "\t" + row[1] + "\n" + seconds_to_days(row[2]) + "\n"
+        msg += row[0] + "\t" + row[1] + " [I]first seen as[/I]  " + row[2] + "\n" + seconds_to_days(row[3]) + "\n"
     ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg=msg)
 
 
@@ -96,14 +96,15 @@ def search_user(ts3conn, dbconn, username, clid):
 # noinspection SqlNoDataSourceInspection,SqlDialectInspection
 def search_uid(ts3conn, dbconn, uid, clid):
     cursor = dbconn.cursor()
-    cursor.execute("SELECT uid, name, time FROM users WHERE uid = ?", (uid,))
+    cursor.execute("SELECT uid, name, first_name, time FROM users WHERE uid = ?", (uid,))
     row = cursor.fetchone()
     if row is None:
         ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="No user found")
         return
 
-    ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="\n" + row[0] + "\t" + row[1] + "\n"
-                                                                      + seconds_to_days(row[2]) + "\n")
+    ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg="\n" + row[0] + "\t" + row[1]
+                                                                      + " [I]first seen as[/I]  " + row[2] + "\n"
+                                                                      + seconds_to_days(row[3]) + "\n")
 
 
 
@@ -112,8 +113,8 @@ def search_uid(ts3conn, dbconn, uid, clid):
 def send_stats(ts3conn, dbconn, clid):
     cursor = dbconn.cursor()
     msg = "\n"
-    for row in cursor.execute("SELECT name, time FROM users ORDER BY time DESC LIMIT 10"):
-        msg += row[0] + "\n" + seconds_to_days(row[1]) + "\n"
+    for row in cursor.execute("SELECT name, first_name, time FROM users ORDER BY time DESC LIMIT 10"):
+        msg += row[0] + " [I]first seen as[/I]  " + row[1] + "\n" + seconds_to_days(row[2]) + "\n"
     ts3conn.exec_("sendtextmessage", targetmode="1", target=clid, msg=msg)
     cursor.execute("SELECT COUNT(*), SUM(time) FROM users")
     row = cursor.fetchone()
@@ -211,10 +212,10 @@ def update_ranking(ts3conn, dbconn):
             continue
 
         if int(info["client_idle_time"]) // 1000 < 180 and info["cid"] not in CHANNEL_BLACKLIST:
-            cursor.execute("INSERT OR IGNORE INTO users VALUES (?,?,0)",
-                           (info["client_unique_identifier"], info["client_nickname"]))
-            cursor.execute("UPDATE users SET time=time+? WHERE uid=?",
-                           (time_passed, info["client_unique_identifier"]))
+            cursor.execute("INSERT OR IGNORE INTO users (uid, name, first_name, time) VALUES (?,?,?,0)",
+                           (info["client_unique_identifier"], info["client_nickname"], info["client_nickname"]))
+            cursor.execute("UPDATE users SET time=time+?, name=? WHERE uid=?",
+                           (time_passed, info["client_nickname"], info["client_unique_identifier"]))
 
             for sg in info["client_servergroups"].split(","):
                 if sg in RANKINGS:
@@ -237,7 +238,7 @@ def update_ranking(ts3conn, dbconn):
 def setup_db():
     dbconn = sqlite3.connect(DATABASE)
     c = dbconn.cursor()
-    c.execute("CREATE TABLE users (uid text primary key, name text, time integer)")
+    c.execute("CREATE TABLE users (uid text primary key, name text, first_name text, time integer)")
     dbconn.commit()
     dbconn.close()
 
