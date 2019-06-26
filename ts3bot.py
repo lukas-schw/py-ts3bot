@@ -32,8 +32,9 @@ def main():
                 dbconn.close()
                 logger.info("Ctrl-c pressed, shutting down")
                 sys.exit(0)
-            except Exception:
+            except Exception as e:
                 if ts3conn.is_connected():
+                    logger.exception(str(e))
                     logger.exception("Exception occurred but connection is still open")
                     continue
                 else:
@@ -182,7 +183,8 @@ def check_channel(ts3conn):
                                 channel_flag_permanent="1", cpid=pid, channel_order=orderid, channel_codec="4",
                                 channel_flag_maxclients_unlimited="0")
             ts3conn.exec_("channeledit", cid=ret[0]["cid"], channel_maxclients=data["max_clients"],
-                          channel_codec_quality="10", channel_icon_id=data["icon_id"])
+                          channel_codec_quality="10")
+            ts3conn.exec_("channeladdperm", cid=ret[0]["cid"], permsid="i_icon_id", permvalue=data["icon_id"])
             ts3conn.exec_("channeladdperm", cid=ret[0]["cid"], permsid="i_channel_needed_modify_power", permvalue="75")
             ts3conn.exec_("channeladdperm", cid=ret[0]["cid"], permsid="i_channel_needed_join_power",
                           permvalue=data["join_power"])
