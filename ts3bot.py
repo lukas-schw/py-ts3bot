@@ -155,6 +155,7 @@ def check_channel(ts3conn):
                 empty_count += 1
                 if num > max_empty_num:
                     max_empty_cid = cid
+                    max_empty_num = num
             nums.append(num)
             num_to_cid[num] = cid
 
